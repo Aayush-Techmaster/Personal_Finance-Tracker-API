@@ -9,9 +9,11 @@ import com.FinanceTracker.PFT.Repository.PortfolioRepo;
 import com.FinanceTracker.PFT.Services.DashboardService;
 import com.FinanceTracker.PFT.Services.UserLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 
@@ -43,45 +45,56 @@ public class UserController {
                 .toList();
         return ResponseEntity.ok(users);
     }
-    @GetMapping("/email/{email}")
-    public ResponseEntity<UserLogin> getUserEmail(@PathVariable String email){
+    @GetMapping("/me")
+    public ResponseEntity<UserLogin> getUserEmail(Principal principal){
+        String email = principal.getName();
         UserLogin user = userLoginService.getUserByEmail(email);
         return ResponseEntity.ok(user);
     }
 
-    @GetMapping("/{email}/dashboard")
-    public ResponseEntity<DashboardResponse> getDashboard(@PathVariable String email){
+    @GetMapping("/dashboard")
+    public ResponseEntity<DashboardResponse> getDashboard(Principal principal){
+        String email = principal.getName();
         DashboardResponse dashboard = dashboardService.getOrCreatePortfolio(email);
         return ResponseEntity.ok(dashboard);
     }
 
-    @PostMapping("/{email}/income")
-    public ResponseEntity<String> addIncome(@PathVariable String email, @RequestParam Long amount) {
+    @PostMapping("/income")
+    public ResponseEntity<String> addIncome(Principal principal, @RequestParam Long amount) {
+        String email = principal.getName();
         dashboardService.saveCategoryTransaction(email, amount, "INCOME");
         return ResponseEntity.ok("Income added successfully");
     }
 
-    @PostMapping("/{email}/expense")
-    public ResponseEntity<String> addExpense(@PathVariable String email, @RequestParam Long amount) {
+    @PostMapping("/expense")
+    public ResponseEntity<String> addExpense(Principal principal, @RequestParam Long amount) {
+        String email = principal.getName();
         dashboardService.saveCategoryTransaction(email, amount, "EXPENSE");
         return ResponseEntity.ok("Expense added successfully");
     }
 
-    @PostMapping("/{email}/assets")
-    public ResponseEntity<String> addAssets(@PathVariable String email, @RequestParam Long amount) {
+    @PostMapping("/assets")
+    public ResponseEntity<String> addAssets(Principal principal, @RequestParam Long amount) {
+        String email = principal.getName();
         dashboardService.saveCategoryTransaction(email, amount, "ASSETS");
         return ResponseEntity.ok("Assets added successfully");
     }
 
-    @PostMapping("/{email}/liabilities")
-    public ResponseEntity<String> addLiabilities(@PathVariable String email, @RequestParam Long amount) {
+    @PostMapping("/liabilities")
+    public ResponseEntity<String> addLiabilities(Principal principal, @RequestParam Long amount) {
+        String email = principal.getName();
         dashboardService.saveCategoryTransaction(email, amount, "LIABILITIES");
         return ResponseEntity.ok("Liabilities added successfully");
     }
 
 
     @PostMapping("/addPortfolioValues")
-    public ResponseEntity<String> addPortfolioValues(@RequestBody PortfolioRequest portfolioRequest){
+    public ResponseEntity<String> addPortfolioValues(Principal principal ,@RequestBody PortfolioRequest portfolioRequest){
+        String tokenEmail = principal.getName();
+        if (!tokenEmail.equals(portfolioRequest.getEmail())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("You can only modify your own portfolio!");
+        }
         dashboardService.saveCategoryTransaction(portfolioRequest);
         return ResponseEntity.ok("Done with adding the values in portfolio");
     }
