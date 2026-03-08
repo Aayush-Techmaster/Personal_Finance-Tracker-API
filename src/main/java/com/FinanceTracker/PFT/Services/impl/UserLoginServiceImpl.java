@@ -4,6 +4,7 @@ import com.FinanceTracker.PFT.Entities.UserLogin;
 import com.FinanceTracker.PFT.Repository.UserRepo;
 import com.FinanceTracker.PFT.Services.UserLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,11 +14,19 @@ public class UserLoginServiceImpl implements UserLoginService {
 
     @Autowired
     private UserRepo userRepo;
+    @Autowired
+    private final PasswordEncoder passwordEncoder;
+
+    public UserLoginServiceImpl(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
+
     @Override
     public UserLogin registerUser(UserLogin user) {
        if(userRepo.existsByEmail(user.getEmail())){
            throw new RuntimeException("Email already registered!!");
        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
        return userRepo.save(user);
     }
 

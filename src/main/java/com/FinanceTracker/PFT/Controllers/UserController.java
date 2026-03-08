@@ -2,6 +2,7 @@ package com.FinanceTracker.PFT.Controllers;
 
 import com.FinanceTracker.PFT.Dtos.DashboardResponse;
 import com.FinanceTracker.PFT.Dtos.PortfolioRequest;
+import com.FinanceTracker.PFT.Dtos.UserResponse;
 import com.FinanceTracker.PFT.Entities.Portfolio;
 import com.FinanceTracker.PFT.Entities.UserLogin;
 import com.FinanceTracker.PFT.Repository.PortfolioRepo;
@@ -10,6 +11,8 @@ import com.FinanceTracker.PFT.Services.UserLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -27,11 +30,19 @@ public class UserController {
     private PortfolioRepo portfolioRepo;
 
     @PostMapping("/register")
-    public ResponseEntity<UserLogin> register(@RequestBody UserLogin user){
-        UserLogin savedUser = userLoginService.registerUser(user);
-        return ResponseEntity.ok(savedUser);
+    public ResponseEntity<UserResponse> register(@RequestBody UserLogin user){
+        UserLogin saved = userLoginService.registerUser(user);
+        UserResponse response = new UserResponse(saved.getUid(), saved.getName(), saved.getEmail());
+        return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = userLoginService.getAllUsers().stream()
+                .map(u -> new UserResponse(u.getUid(), u.getName(), u.getEmail()))
+                .toList();
+        return ResponseEntity.ok(users);
+    }
     @GetMapping("/email/{email}")
     public ResponseEntity<UserLogin> getUserEmail(@PathVariable String email){
         UserLogin user = userLoginService.getUserByEmail(email);
