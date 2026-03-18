@@ -3,7 +3,6 @@ package com.FinanceTracker.PFT.Controllers;
 import com.FinanceTracker.PFT.Dtos.DashboardResponse;
 import com.FinanceTracker.PFT.Dtos.PortfolioRequest;
 import com.FinanceTracker.PFT.Dtos.UserResponse;
-import com.FinanceTracker.PFT.Entities.Portfolio;
 import com.FinanceTracker.PFT.Entities.UserLogin;
 import com.FinanceTracker.PFT.Repository.PortfolioRepo;
 import com.FinanceTracker.PFT.Services.DashboardService;
@@ -19,6 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins="*")
 public class UserController {
 
 

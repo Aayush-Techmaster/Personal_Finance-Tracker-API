@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Tracker</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f4f9; color: #333; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; margin-top: 0; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        .hidden { display: none; }
+        .dashboard-stats { background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center; }
+        .error { color: red; font-size: 0.9em; text-align: center; }
+        .toggle-link { color: #007bff; text-align: center; display: block; cursor: pointer; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="auth-section">
+        <h2 id="auth-title">Login</h2>
+        <div id="auth-error" class="error"></div>
+
+        <input type="text" id="name" placeholder="Full Name" class="hidden">
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="password" placeholder="Password">
+
+        <button onclick="handleAuth()" id="auth-btn">Login</button>
+        <span class="toggle-link" onclick="toggleAuthMode()" id="toggle-msg">Don't have an account? Register</span>
+    </div>
+
+    <div id="dashboard-section" class="hidden">
+        <h2>My Portfolio</h2>
+        <button onclick="logout()" style="background-color: #dc3545; margin-bottom: 20px;">Logout</button>
+
+        <div class="dashboard-stats" id="stats-container">
+            <p>Loading your financial data...</p>
+        </div>
+
+        <h3>Add Transaction</h3>
+        <input type="number" id="amount" placeholder="Amount (e.g., 500)">
+
+        <div style="display: flex; gap: 10px;">
+            <button onclick="addTransaction('income')" style="background-color: #28a745;">+ Income</button>
+            <button onclick="addTransaction('expense')" style="background-color: #dc3545;">- Expense</button>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="addTransaction('assets')">+ Asset</button>
+            <button onclick="addTransaction('liabilities')">+ Liability</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Configuration: Point this to your Spring Boot port
+    const API_BASE_URL = 'http://localhost:8080/api';
+    let isLoginMode = true;
+
+    // Check if user is already logged in when page loads
+    window.onload = () => {
+        const token = localStorage.getItem('jwt_token');
+        if (token) showDashboard();
+    };
+
+    function toggleAuthMode() {
+        isLoginMode = !isLoginMode;
+        document.getElementById('auth-title').innerText = isLoginMode ? 'Login' : 'Register';
+        document.getElementById('auth-btn').innerText = isLoginMode ? 'Login' : 'Register';
+        document.getElementById('toggle-msg').innerText = isLoginMode ? "Don't have an account? Register" : "Already have an account? Login";
+
+        const nameInput = document.getElementById('name');
+        if (isLoginMode) nameInput.classList.add('hidden');
+        else nameInput.classList.remove('hidden');
+    }
+
+    async function handleAuth() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const name = document.getElementById('name').value;
+        const errorDiv = document.getElementById('auth-error');
+        errorDiv.innerText = '';
+
+        try {
+            if (isLoginMode) {
+                // LOGIN REQUEST
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) throw new Error('Invalid credentials');
+
+                const data = await response.json();
+                localStorage.setItem('jwt_token', data.token); // SAVE TOKEN
+                showDashboard();
+
+            } else {
+                // REGISTER REQUEST
+                const response = await fetch(`${API_BASE_URL}/users/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                if (!response.ok) throw new Error('Registration failed');
+
+                alert('Registration successful! Please login.');
+                toggleAuthMode();
+            }
+        } catch (error) {
+            errorDiv.innerText = error.message;
+        }
+    }
+
+    async function showDashboard() {
+        document.getElementById('auth-section').classList.add('hidden');
+        document.getElementById('dashboard-section').classList.remove('hidden');
+        loadDashboardData();
+    }
+
+    async function loadDashboardData() {
+        const token = localStorage.getItem('jwt_token');
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/dashboard`, {
+                method: 'GET',
+                // PASSING THE TOKEN HERE
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Failed to load dashboard. Token might be expired.');
+
+            const data = await response.json();
+            // Build a clean grid to display the parsed JSON data
+            const statsContainer = document.getElementById('stats-container');
+            statsContainer.innerHTML = `
+                <div style="text-align: center; margin-bottom: 10px; font-size: 0.9em; color: #666;">
+                    User: ${data.email}
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                    <div><strong>🟢 Income:</strong> <br>₹${data.totalIncome}</div>
+                    <div><strong>🔴 Expense:</strong> <br>₹${data.totalExpense}</div>
+                    <div><strong>🔵 Assets:</strong> <br>₹${data.totalAssets}</div>
+                    <div><strong>🟠 Liabilities:</strong> <br>₹${data.totalLiabilities}</div>
+                </div>
+            `;
+        } catch (error) {
+            console.error(error);
+            logout(); // Force login if token is bad
+        }
+    }
+
+    async function addTransaction(type) {
+        const amount = document.getElementById('amount').value;
+        if (!amount) return alert('Please enter an amount');
+
+        const token = localStorage.getItem('jwt_token');
+        try {
+            // Notice how amount is a query parameter to match your @RequestParam
+            const response = await fetch(`${API_BASE_URL}/users/${type}?amount=${amount}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                alert(`${type} added successfully!`);
+                document.getElementById('amount').value = '';
+                loadDashboardData(); // Refresh data
+            } else {
+                alert(`Failed to add ${type}`);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('jwt_token'); // DELETE TOKEN
+        document.getElementById('dashboard-section').classList.add('hidden');
+        document.getElementById('auth-section').classList.remove('hidden');
+        document.getElementById('dash-data').innerText = 'Loading...';
+    }
+</script>
+
+</body>
+</html>
