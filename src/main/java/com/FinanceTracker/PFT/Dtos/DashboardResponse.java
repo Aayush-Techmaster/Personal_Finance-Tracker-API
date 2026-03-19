@@ -15,5 +15,6 @@ public class DashboardResponse {
     private Long totalExpense;
     private Long totalAssets;
     private Long totalLiabilities;
+    private Long CurrentBalance;
     private Long netWorth;
 }

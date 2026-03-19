@@ -19,6 +19,7 @@ public class Portfolio {
     private Long assets;
     private Long liabilities;
     private Long netWorth;
+    private Long CurrentBalance;
 
     @OneToOne
     @JoinColumn(name="user_id")

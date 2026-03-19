@@ -15,4 +15,5 @@ public class PortfolioRequest {
     private Long totalIncome;
     private Long totalExpense;
     private Long totalLiabilities;
+    private Long assets;
 }

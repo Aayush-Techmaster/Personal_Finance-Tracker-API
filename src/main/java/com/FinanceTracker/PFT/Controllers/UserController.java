@@ -85,6 +85,19 @@ public class UserController {
         return ResponseEntity.ok("Liabilities added successfully");
     }
 
+    @DeleteMapping("/deleteAssets")
+    public ResponseEntity<String> deleteAssets(Principal principal, @RequestParam Long amount){
+        String email = principal.getName();
+        dashboardService.deleteAssetsAndLiabilities(email, amount, "ASSETS");
+        return ResponseEntity.ok("Assets deleted successfully");
+    }
+    @DeleteMapping("/deleteLiabilities")
+    public ResponseEntity<String> deleteLiabilities(Principal principal, @RequestParam Long amount){
+        String email = principal.getName();
+        dashboardService.deleteAssetsAndLiabilities(email, amount, "LIABILITIES");
+        return ResponseEntity.ok("Assets deleted successfully");
+    }
+
 
     @PostMapping("/addPortfolioValues")
     public ResponseEntity<String> addPortfolioValues(Principal principal ,@RequestBody PortfolioRequest portfolioRequest){

@@ -16,5 +16,6 @@ public interface DashboardService {
     void saveCategoryTransaction(String email, Long amount, String type);
      DashboardResponse getOrCreatePortfolio(String email) ;
 
+   void deleteAssetsAndLiabilities(String email, Long amount, String type);
     void saveCategoryTransaction(PortfolioRequest portfolioRequest);
 }
