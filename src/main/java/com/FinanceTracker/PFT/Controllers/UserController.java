@@ -4,7 +4,6 @@ import com.FinanceTracker.PFT.Dtos.DashboardResponse;
 import com.FinanceTracker.PFT.Dtos.PortfolioRequest;
 import com.FinanceTracker.PFT.Dtos.UserResponse;
 import com.FinanceTracker.PFT.Entities.UserLogin;
-import com.FinanceTracker.PFT.Repository.PortfolioRepo;
 import com.FinanceTracker.PFT.Services.DashboardService;
 import com.FinanceTracker.PFT.Services.UserLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +27,7 @@ public class UserController {
     @Autowired
     private DashboardService dashboardService;
 
-    @Autowired
-    private PortfolioRepo portfolioRepo;
+
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@RequestBody UserLogin user){
